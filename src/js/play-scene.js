@@ -1,7 +1,7 @@
+var maped;
 class PlayScene extends Phaser.Scene {
     constructor() {
         super('PlayScene');
-        this.bombs;
     }
 
     create() {
@@ -13,15 +13,23 @@ class PlayScene extends Phaser.Scene {
         //this.doh.play();
 
         //  A simple background for our game
-        this.add.image(0, 0, 'background').setOrigin(0, 0).setScale(3.5,1.3);
+        this.background = this.add.image(0, 0, 'background').setOrigin(0, 0).setScale(3.5,1.3);
 
         // skapa en tilemap från JSON filen vi preloadade
         const map = this.make.tilemap({ key: "map", tileWidth: 32, tileHeight: 32 });
 
         // ladda in tilesetbilden till vår tilemap
         const tileset = map.addTilesetImage('32Tileset', 'tiles');
+        this.Started = false;
 
-        this.background = map.createLayer('Background', tileset);
+        this.tilebackground = map.createLayer('Background', tileset);
+
+        map.getObjectLayer('StartDoor').objects.forEach((StartDoor) => {
+            this.StartDoor = this.physics.add.sprite(StartDoor.x, StartDoor.y - StartDoor.height, 'Door').setScale(0.5,0.5);
+            this.StartDoor.body.immovable = true;
+        });
+
+        maped = map;
 
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
@@ -63,44 +71,29 @@ class PlayScene extends Phaser.Scene {
         this.pickups = this.physics.add.group({
         })
 
-        map.getObjectLayer('Brawlers').objects.forEach((Brawler) => {
-            this.brawler = this.brawlers.create(Brawler.x, Brawler.y, 'brawler').setScale(0.5);
-            this.brawler.setVelocityX(0);
-            this.brawler.setVelocityY(0);
-            this.brawler.setDataEnabled();
-            this.brawler.setData({ health: 20 });
-        });
-        map.getObjectLayer('Shooters').objects.forEach((shooter) => {
-            // iterera över spikarna, skapa spelobjekt
-            this.shooter = this.Shooters.create(shooter.x, shooter.y - shooter.height, 'shooter');
-            this.shooter.setDataEnabled();
-            this.shooter.body.setGravityY(300);
-            if(shooter.type==0) {
-            this.shooter.setData({ time: Phaser.Math.FloatBetween(0,100), type: 1, health: 10 });
-        } else {
-            this.shooter.setData({ time: 0, type: 2, health: 10 });
-            this.shooter.setTint(0x0000ff)
-        }
-        });
         map.getObjectLayer('Door').objects.forEach((Door) => {
             this.Door = this.physics.add.sprite(Door.x, Door.y - Door.height-32, 'Door').setScale(0.5,1);
-            this.Door.body.imovable = true;
-            //this.Door.body.moves = false;
+            this.Door.body.immovable = true;
         });
 
-        map.getObjectLayer('StartDoor').objects.forEach((StartDoor) => {
-            this.StartDoor = this.physics.add.sprite(StartDoor.x, StartDoor.y - StartDoor.height, 'Door').setScale(0.5,0.5);
-            this.StartDoor.body.imovable = true;
-        });
         map.getObjectLayer('StartButton').objects.forEach((StartButton) => {
             this.StartButton = this.physics.add.sprite(StartButton.x-12, StartButton.y - StartButton.height, 'button').setScale(1);
-            this.StartButton.body.imovable = true;
+            this.StartButton.body.immovable = true;
+        });
+        map.getObjectLayer('StartZone').objects.forEach((StartZone) => {
+            this.StartZone = this.physics.add.sprite(StartZone.x, StartZone.y+StartZone.height/2, 'empty').setSize(1,StartZone.height);
+            this.StartZone.body.immovable = true;
         });
 
         this.buttonPressed = false
 
         
         this.createAnims();
+
+        this.graphics = this.add.graphics({
+            lineStyle: { width: 1, color: 0x03a8fff2 },
+        });
+    
         
 
         this.lifesText = this.add.text(16, 16, 'lifes: 6 / 6', { fontSize: '32px', fill: '#00FF00' });
@@ -110,6 +103,10 @@ class PlayScene extends Phaser.Scene {
         this.physics.add.collider(this.donuts, this.platforms);
         this.physics.add.collider(this.player, this.platforms);
         this.physics.add.collider(this.pickups, this.platforms);
+        this.physics.add.collider(this.player, this.StartDoor);
+        this.physics.add.collider(this.player, this.Door);
+
+        this.physics.add.overlap(this.player, this.StartZone, this.start, null, this);
 
         this.physics.add.collider(this.bombs, this.platforms, this.destroyBullet, null, this);
         this.physics.add.overlap(this.player, this.bombs, this.hitPlayerBomb, null, this);
@@ -123,10 +120,8 @@ class PlayScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.tint = Phaser.Display.Color.GetColor(100 * (this.player.data.values.iFrames / 80) + 155, 100 * (this.player.data.values.iFrames / 80) + 155, 155 * (this.player.data.values.iFrames / 80) + 100)
-        if (this.player.getData('iFrames') != 80) {
-            this.player.setData('iFrames', this.player.getData('iFrames') + 1);
-        }
+        this.Iframes();
+        this.background.x-=1;
         if (this.buttonPressed) {
             this.StartButton.anims.play('Pressed', true);
         } else {
@@ -176,7 +171,6 @@ class PlayScene extends Phaser.Scene {
         }
         
         if (this.cursors.down.isDown) {
-            console.log(this.Shooters.countActive(true), this.brawlers.countActive(true))
         }
 
         if (this.keyObj.isDown) {
@@ -208,24 +202,31 @@ class PlayScene extends Phaser.Scene {
             this.player.setData('donutTimer', this.player.getData('donutTimer') + 1);
         }
 
-        var x = this.player.body.x
-        var y = this.player.body.y
+        //var player = this.player.body.y
         var right = this.right
+        var x = this.player.body.x;
+        var y = this.player.body.y;
+        var width = this.player.body.width;
+        var height = this.player.body.height;
+
+        var bombs = this.bombs;
+        var dis = this;
         this.brawlers.children.iterate(function (child) {
             if ((child.body.x>x && right) || (child.body.x<x && !right)) {
-                child.body.setVelocityX(0)
-                child.body.setVelocityY(0)
+
+                child.body.velocity.x *= 0.97;
+                child.body.velocity.y *= 0.97;
                 child.alpha=0.25;
             } else {
                 let angle = Math.atan2((y - child.body.y), (x - child.body.x))
-                child.body.setVelocityX(Math.cos(angle) * 50)
-                child.body.setVelocityY(Math.sin(angle) * 50)
+                child.body.setVelocityX(Math.cos(angle) * 200)
+                child.body.setVelocityY(Math.sin(angle) * 200)
                 child.alpha=1;
             }
         })
-        var bombs = this.bombs;
         this.Shooters.children.iterate(function (child) {
-            if (child.getData('time')>=100) {
+            var num = dis.Raycast(x,y,width,height,child);
+            if (child.getData('time')>=100 && num==0) {
                 if (child.getData('type')==1) {
                 let angle = Math.atan2((y-child.body.y),(x-child.body.x))
                 var bomb = bombs.create(child.body.x+32, child.body.y+32, 'bomb');
@@ -294,9 +295,15 @@ class PlayScene extends Phaser.Scene {
         }
 
 
-        if (this.Shooters.countActive(true)==0 && this.brawlers.countActive(true)==0) {
-            console.log("Yea")
+        if (this.Shooters.countActive(true)==0 && this.brawlers.countActive(true)==0 && this.Started) {
             this.Door.destroy();
+        }
+    }
+
+    Iframes() {
+        this.player.tint = Phaser.Display.Color.GetColor(100 * (this.player.data.values.iFrames / 80) + 155, 100 * (this.player.data.values.iFrames / 80) + 155, 155 * (this.player.data.values.iFrames / 80) + 100);
+        if (this.player.getData('iFrames') != 80) {
+            this.player.setData('iFrames', this.player.getData('iFrames') + 1);
         }
     }
 
@@ -309,10 +316,18 @@ class PlayScene extends Phaser.Scene {
         this.scene.launch('MenuScene');
     }
     */
-   hitButton(donut, button) {
+   hitButton(donut, _button) {
     donut.setData('time', 0);
     this.buttonPressed=true;
-    this.StartDoor.destroy();
+    //this.StartDoor.disableBody(true, true);
+    this.tweens.add({
+        targets: this.StartDoor,
+        y: 416,
+        duration: 200,
+        //ease: 'Sine.easeInOut',
+        //repeat: -1,
+        //yoyo: true
+    });
    }
    destroyBullet(bomb, _platform) {
        bomb.destroy();
@@ -320,11 +335,8 @@ class PlayScene extends Phaser.Scene {
 
     hitShooter(donut, shooter) {
         shooter.setData('health', shooter.getData('health') - donut.getData('damage'))
-        console.log(shooter)
         if (shooter.getData('health') <= 0) {
-            if (Phaser.Math.FloatBetween(0,1)>0.1) {
                 this.spawnHealth(shooter);
-            }
             shooter.destroy();
         }
         donut.setData('time', 0);
@@ -332,9 +344,8 @@ class PlayScene extends Phaser.Scene {
     hitBrawler(donut, brawler) {
         brawler.data.values.health -= donut.getData('damage');
         if (brawler.getData('health') <= 0) {
-            if (Phaser.Math.FloatBetween(0,1)>0.1) {
-                this.spawnHealth(brawler);
-            }
+            this.spawnHealth(brawler);
+
             brawler.destroy();
         }
         donut.setData('time', 0);
@@ -351,6 +362,21 @@ class PlayScene extends Phaser.Scene {
     hitPlayerBrawler(player, _brawler) {
         this.hitPlayer(player);
     };
+    hitPlayer(player){
+        if (player.getData('iFrames') == 80) {
+            player.data.values.health -= 1;
+            this.lifesText.setText("lifes: " + player.data.values.health + " / " + player.data.values.maxhealth);
+            if (player.data.values.health <= 0) {
+                player.setTint(0xff0000);
+                this.physics.pause();
+
+                player.anims.play('turn');
+
+                this.gameOver = true;
+            }
+            player.data.values.iFrames = 0;
+        }
+    };
 
     pickuped(player, pickup) {
         if (player.getData('health')!=player.getData('maxhealth')) {
@@ -360,26 +386,13 @@ class PlayScene extends Phaser.Scene {
         }
     }
     
-    hitPlayer(player){
-        if (player.getData('iFrames') == 80) {
-            player.data.values.health -= 1;
-            this.lifesText.setText("lifes: " + player.data.values.health + " / " + player.data.values.maxhealth);
-            if (player.data.values.health == 0) {
-                this.physics.pause();
-
-                player.setTint(0xff0000);
-                player.anims.play('turn');
-
-                this.gameOver = true;
-            }
-            player.data.values.iFrames = 0;
-        }
-    };
     spawnHealth(location){
+        if (Phaser.Math.FloatBetween(0,1)>0.1) {
         var Health = this.pickups.create(location.x, location.y, 'health').setScale(0.5);
         Health.setDataEnabled();
         Health.setData({health: 1,time: 300 });
         Health.setGravityY(300)
+        }
     }
     createAnims(){
         this.anims.create({
@@ -410,6 +423,50 @@ class PlayScene extends Phaser.Scene {
             frames: [{ key: 'button', frame: 1 }],
             frameRate: 20
         });
+    }
+    Raycast(x,y,width,height, child) {
+        let line = new Phaser.Geom.Line( x, y, child.x, child.y-16);
+        let line2 = new Phaser.Geom.Line( x+ width,  y+ height, child.x, child.y+16);
+        let line3 = new Phaser.Geom.Line( x,  y+ height, child.x, child.y-16);
+        let line4 = new Phaser.Geom.Line( x+ width,  y, child.x, child.y+16);
+        let overlappingTiles = this.platforms.getTilesWithinShape(line, { isColliding: true });
+        let overlappingTiles2 = this.platforms.getTilesWithinShape(line2, { isColliding: true });
+        let overlappingTiles3 = this.platforms.getTilesWithinShape(line3, { isColliding: true });
+        let overlappingTiles4 = this.platforms.getTilesWithinShape(line4, { isColliding: true });
+        return overlappingTiles.length + overlappingTiles2.length + overlappingTiles3.length + overlappingTiles4.length; 
+    }
+    start(player, StartZone){
+        this.tweens.add({
+            targets: this.StartDoor,
+            y: 480,
+            duration: 50,
+            ease: 'Sine.easeInOut',
+            //repeat: -1,
+            //yoyo: true
+        });
+        maped.getObjectLayer('Brawlers').objects.forEach((Brawler) => {
+            this.brawler = this.brawlers.create(Brawler.x, Brawler.y, 'brawler').setScale(0.5);
+            this.brawler.setVelocityX(0);
+            this.brawler.setVelocityY(0);
+            this.brawler.setDataEnabled();
+            this.brawler.setData({ health: 20 });
+        });
+        maped.getObjectLayer('Shooters').objects.forEach((shooter) => {
+            // iterera över spikarna, skapa spelobjekt
+            this.shooter = this.Shooters.create(shooter.x, shooter.y - shooter.height, 'shooter');
+            this.shooter.setDataEnabled();
+            this.shooter.body.setGravityY(300);
+            if(shooter.type==0) {
+            this.shooter.setData({ time: Phaser.Math.FloatBetween(0,100), type: 1, health: 10 });
+        } else {
+            this.shooter.setData({ time: 0, type: 2, health: 10 });
+            this.shooter.setTint(0x0000ff)
+        }
+        });
+
+
+        StartZone.destroy();
+        this.Started=true;
     }
 }
 
