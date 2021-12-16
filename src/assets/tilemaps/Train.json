@@ -134,6 +134,28 @@
         }, 
         {
          "draworder":"topdown",
+         "id":13,
+         "name":"BossZone",
+         "objects":[
+                {
+                 "height":256,
+                 "id":45,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":4000,
+                 "y":256
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":5,
          "name":"StartButton",
          "objects":[
@@ -366,8 +388,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":13,
- "nextobjectid":45,
+ "nextlayerid":14,
+ "nextobjectid":47,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

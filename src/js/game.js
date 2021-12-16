@@ -14,7 +14,7 @@ const config = {
         default: 'arcade',
         arcade: {
             
-            debug: false
+            debug: true
         }
     },
     scene: [PreloadScene, PlayScene, MenuScene],
