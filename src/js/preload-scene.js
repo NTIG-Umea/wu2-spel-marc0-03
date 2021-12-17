@@ -19,7 +19,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('boss', '/images/Boss.png')
         this.load.spritesheet('dude', '/images/dude.png', { frameWidth: 32, frameHeight: 48 }, );
         this.load.spritesheet('button', '/images/Button.png', { frameWidth: 26, frameHeight: 28 }, );
-        this.load.spritesheet('Powerups', '/images/Powerups.png', { frameWidth: 71, frameHeight: 64 }, 9);
+        this.load.spritesheet('Powerups', '/images/Powerups.png', { frameWidth: 71, frameHeight: 64 }, );
 
         this.load.image('paket1', '/images/Paket.png')
         this.load.image('paket2', '/images/Paket2.png')

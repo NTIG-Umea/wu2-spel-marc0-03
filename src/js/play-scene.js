@@ -39,18 +39,19 @@ class PlayScene extends Phaser.Scene {
             this.player.setData({
                 iFrames: 80,
                 maxFrames: 80,
-                health: 60,
-                maxhealth: 60,
-                donutCooldown: 10,
-                donutTimer: 40,
-                damage: 100,
+                health: 6,
+                maxhealth: 6,
+                donutCooldown: 40,
+                donutTimer: 0,
+                damage: 10,
                 time: 140,
-                donutSplits: 1,
-                donutSpeed: 450,
+                donutSpeed: 550,
                 speed: 400,
                 jumpHeight: -500,
                 jumps: 1,
-                jumpsMax: 1
+                jumpsMax: 1,
+                donutSplits: 1,
+                shots: 1
             });
             this.add.text(Player.x, Player.y-40, 'Press "Z" to shoot', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-30, 'Press Space to jump and double jump', { font: '"Press Start 2P"' });
@@ -58,6 +59,7 @@ class PlayScene extends Phaser.Scene {
             //donutCooldown is the amount of time it takes to reaload
             //donutTimer is the thing that is counting down
         });
+
 
         this.createAnims();
         this.createCameras();
@@ -86,7 +88,7 @@ class PlayScene extends Phaser.Scene {
         map.getObjectLayer('Items').objects.forEach((Item) => {
             let random = Phaser.Math.FloatBetween(0, 10)
             this.Item = this.items.create(Item.x, Item.y, 'Powerups').setScale(1);
-            this.add.text(Item.x, Item.y, 'Hello World', { font: '"Press Start 2P"' });
+            this.add.text(Item.x-40, Item.y+40, 'Hello World', { font: '"Press Start 2P"' });
             if (random <= 1) {
                 this.Item.anims.play('0', true);
                 this.Item.setData({ type: 1 });
@@ -118,6 +120,12 @@ class PlayScene extends Phaser.Scene {
                 this.Item.anims.play('9', true);
                 this.Item.setData({ type: 10 });
             }
+            if (Phaser.Math.FloatBetween(0,1)<0.8) {
+                this.Item.setData({ level: 2 });
+                this.Item.setTint(0xffff00)
+            } else {
+                this.Item.setData({ type: 1 });
+            }
 
         });
 
@@ -128,7 +136,7 @@ class PlayScene extends Phaser.Scene {
             fillStyle: { color: Phaser.Display.Color.GetColor(255, 0, 0), alpha: 0.2 }
         });
 
-        this.lifesText = this.add.text(16, 16, 'lifes: 6 / 6', { fontSize: '42px', fill: '#000000' });
+        this.lifesText = this.add.text(16, 16, 'lifes: ' + this.player.getData('maxhealth')+ " / "+ this.player.getData('maxhealth'), { fontSize: '42px', fill: '#000000' });
         this.lifesText.setScrollFactor(0);
 
         this.Hitboxes();
@@ -166,12 +174,10 @@ class PlayScene extends Phaser.Scene {
         this.PlayerLeftRight();
         this.PlayerJump();
         this.PlayerShoot();
-        this.cameras.main.shake(20, 0.0012);
+        //this.cameras.main.shake(20, 0.0012);
 
 
-        if (this.cursors.down.isDown) {
-
-        }
+    
 
 
         var right = this.right
@@ -196,12 +202,12 @@ class PlayScene extends Phaser.Scene {
                 child.alpha = 1;
             }
         } else {
-            if ((child.body.x > x && !right) || (child.body.x < x && right)) {
-                child.body.velocity.x *= 0.97;
-                child.body.velocity.y *= 0.97;
+            let angle = Math.atan2((y - child.body.y), (x - child.body.x))
+            if ((child.body.x > x && right) || (child.body.x < x && !right)) {
+                child.body.setVelocityX(Math.cos(angle) * 100)
+                child.body.setVelocityY(Math.sin(angle) * 100)
                 child.alpha = 0.25;
             } else {
-                let angle = Math.atan2((y - child.body.y), (x - child.body.x))
                 child.body.setVelocityX(Math.cos(angle) * 200)
                 child.body.setVelocityY(Math.sin(angle) * 200)
                 child.alpha = 1;
@@ -249,6 +255,10 @@ class PlayScene extends Phaser.Scene {
                 if (child.data.values.health <= 300) {
                     child.data.values.attackCooldown = 10;
                     child.setTint(0x00ff00)
+                    if (child.data.values.health>10) {
+                    child.data.values.health-=7;
+                    dis.HealthBar.width = 300 * (child.data.values.health / 2000)
+                }
                 } else if (child.data.values.health <= 1000){
                     child.data.values.attackCooldown = 100;
                     child.setTint(0xff0000)
@@ -358,26 +368,36 @@ class PlayScene extends Phaser.Scene {
     PlayerShoot() {
         if (this.keyObj.isDown) {
             if (this.player.getData('donutTimer') <= 0) {
+                
+                let angle;
+                if (this.right) {
+                    angle=Math.PI*2 
+                if (this.cursors.up.isDown) {
+                    angle-=Math.PI/5
+                } else if (this.cursors.down.isDown) {
+                    angle+=Math.PI/5
+                }
+                } else {
+                    angle=Math.PI
+                    if (this.cursors.up.isDown) {
+                        angle+=Math.PI/5
+                    } else if (this.cursors.down.isDown) {
+                        angle-=Math.PI/5
+                    }
+                }
+
+                for (let s = 0; s<=this.player.getData('shots')-1; s++) {
+                    let tempangle = angle+Phaser.Math.FloatBetween(-1*Math.PI/18,Math.PI/18)
                 this.donut = this.donuts.create(this.player.body.x + this.player.body.width / 2, this.player.body.y + this.player.body.height / 2, 'donut');
                 this.donut.setScale(0.5);
-                if (this.right) {
-                    this.donut.body.velocity.x = this.player.getData('donutSpeed');
-                    this.donut.angle = 270;
-                } else {
-                    this.donut.body.velocity.x = -1 * this.player.getData('donutSpeed');
-                    this.donut.angle = 90;
-                }
-                if (this.cursors.up.isDown) {
-                    this.donut.body.velocity.y = -1 * this.player.getData('donutSpeed') / 2;
-                } else if (this.cursors.down.isDown) {
-                    this.donut.body.velocity.y = this.player.getData('donutSpeed') / 2;
-                }
+                this.donut.setVelocityX(Math.cos(tempangle) * this.player.getData('donutSpeed'))
+                this.donut.setVelocityY(Math.sin(tempangle) * this.player.getData('donutSpeed'))
                 this.donut.setBounce(0.8);
                 this.donut.setGravityY(300);
                 this.donut.setDataEnabled();
                 this.donut.setData({ time: this.player.getData('time'), damage: this.player.getData('damage'), splits: this.player.getData('donutSplits') });
+                }
                 this.player.setData('donutTimer', this.player.getData('donutCooldown'));
-                console.log("damage =" + this.donut.getData('damage'));
             }
         }
         if (this.player.getData('donutTimer') != 0) {
@@ -401,13 +421,15 @@ class PlayScene extends Phaser.Scene {
             if (this.player.body.velocity.x >= this.player.getData('speed') * -1) {
                 this.player.setVelocityX(this.player.body.velocity.x + this.player.getData('speed') * -0.2);
             }
+            this.player.setFlipX(false)
             this.player.anims.play('left', true);
         } else if (this.cursors.right.isDown) {
             this.right = true;
             if (this.player.body.velocity.x <= this.player.getData('speed')) {
                 this.player.setVelocityX(this.player.body.velocity.x + this.player.getData('speed') * 0.2);
             }
-            this.player.anims.play('right', true);
+            this.player.setFlipX(true)
+            this.player.anims.play('left', true);
         } else {
             this.player.body.velocity.x *= 0.9;
             this.player.anims.play('turn', true);
@@ -663,7 +685,7 @@ class PlayScene extends Phaser.Scene {
     hitPlayer(player, _not) {
         if (player.getData('iFrames') == 0) {
             player.data.values.health -= 1;
-            this.doh.play();
+            //this.doh.play();
             this.lifesText.setText("lifes: " + player.data.values.health + " / " + player.data.values.maxhealth);
             if (player.data.values.health <= 0) {
                 player.setTint(0xff0000);
@@ -686,8 +708,7 @@ class PlayScene extends Phaser.Scene {
     }
     itemed(player, item) {
         if (item.getData('type') == 1) {
-            this.player.setData('damage', this.player.getData('damage') * 2)
-
+            this.player.setData('damage', this.player.getData('damage') * 1.5)
         } else if (item.getData('type') == 2) {
             this.player.setData('jumpHeight', this.player.getData('jumpHeight') * 1.25)
 
@@ -701,17 +722,18 @@ class PlayScene extends Phaser.Scene {
             this.player.setData('jumpsMax', this.player.getData('jumpsMax') + 2)
 
         } else if (item.getData('type') == 6) {
-            this.player.setData('MaxFrames', this.player.getData('MaxFrames') * 1.5)
+            this.player.setData('shots', this.player.getData('shots')+2)
+            this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 1.3)
 
         } else if (item.getData('type') == 7) {
             this.player.setData('Speed', this.player.getData('speed') + 300)
 
         } else if (item.getData('type') == 8) {
-            this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 0.5)
+            this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 0.7)
 
         } else if (item.getData('type') == 9) {
-            this.player.setData('health', this.player.getData('health') + 2)
-            this.player.setData('maxhealth', this.player.getData('maxhealth') + 2)
+            this.player.setData('health', this.player.getData('health') + 3)
+            this.player.setData('maxhealth', this.player.getData('maxhealth') + 3)
             this.lifesText.setText("lifes: " + player.data.values.health + " / " + player.data.values.maxhealth);
 
         } else {

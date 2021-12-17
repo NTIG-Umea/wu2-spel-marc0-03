@@ -3,8 +3,10 @@
 - [x] Move project to new repository
 - [x] Health pickups from enemies
 - [x] Start using tilemaps and check everything works
-- [/] Make doors and items 
+- [x] Make doors and items 
 - [x] Final boss
 
-- [ ] add new brawler type maybe?
-- [ ] Try Paralax
+- [x] add new brawler type maybe?
+- [x] Try Paralax
+
+- [ ] More than one map
