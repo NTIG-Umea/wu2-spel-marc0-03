@@ -17,7 +17,9 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('health', '/images/Health.png')
         this.load.image('empty', '/images/empty.png')
         this.load.image('boss', '/images/Boss.png')
+        this.load.image('black', '/images/black.png')
         this.load.spritesheet('dude', '/images/dude.png', { frameWidth: 32, frameHeight: 48 }, );
+        this.load.spritesheet('Homer', '/images/Himpon.png', { frameWidth: 40, frameHeight: 64 }, );
         this.load.spritesheet('button', '/images/Button.png', { frameWidth: 26, frameHeight: 28 }, );
         this.load.spritesheet('Powerups', '/images/Powerups.png', { frameWidth: 71, frameHeight: 64 }, );
 
@@ -31,9 +33,14 @@ class PreloadScene extends Phaser.Scene {
 
         // här laddar vi in en tilemap med spelets "karta"
         this.load.image('tiles', '/tilesets/jefrens_tilesheet.png');
-        //this.load.tilemapTiledJSON('map', '/tilemaps/level1.json');
-        //this.load.tilemapTiledJSON('map', '/tilemaps/Traintest.json');
-        this.load.tilemapTiledJSON('map', '/tilemaps/Train.json');
+        this.load.image('tiles2', '/tilesets/Tileset_egen.png');
+        this.load.image('tiles3', '/tilesets/train-tileset-new.png');
+
+        this.load.tilemapTiledJSON('map1', '/tilemaps/TrainMap1.json');
+        this.load.tilemapTiledJSON('map2', '/tilemaps/TrainMap2.json');
+        this.load.tilemapTiledJSON('map3', '/tilemaps/TrainMap3.json');
+        this.load.tilemapTiledJSON('map4', '/tilemaps/TrainMap4.json');
+
 
         this.load.audio('doh', '/audio/Doh.mp3');
         

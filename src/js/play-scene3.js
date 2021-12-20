@@ -1,8 +1,12 @@
 var maped;
-class PlayScene extends Phaser.Scene {
+var tempplayer;
+class PlayScene3 extends Phaser.Scene {
     constructor() {
-        super('PlayScene');
-        this.scenetest = "tjena från " + this.scene;
+        super('PlayScene3');
+    }
+    init(data)
+    {
+        tempplayer = data.player;
     }
 
     create() {
@@ -17,7 +21,7 @@ class PlayScene extends Phaser.Scene {
 
         this.createMountains();
 
-        const map = this.make.tilemap({ key: "map1", tileWidth: 32, tileHeight: 32 });
+        const map = this.make.tilemap({ key: "map3", tileWidth: 32, tileHeight: 32 });
         const tileset = map.addTilesetImage('32Tileset', 'tiles');
         const tileset2 = map.addTilesetImage('train-tileset-outside', 'tiles2');
         const tileset3 = map.addTilesetImage('train-tileset-new', 'tiles3');
@@ -34,32 +38,34 @@ class PlayScene extends Phaser.Scene {
         this.platforms = map.createLayer('Platforms', tileset3);
         this.platforms.setCollisionByExclusion(-1, true);
         map.getObjectLayer('Player').objects.forEach((Player) => {
+            
             this.player = this.physics.add.sprite(Player.x, Player.y, 'Homer').setScale(0.8,0.65);
             this.player.setBounce(0);
             this.player.setCollideWorldBounds(true);
             this.player.setGravityY(1400)
             this.player.setDataEnabled();
             this.player.setData({
-                iFrames: 80,
-                maxFrames: 80,
-                health: 6,
-                maxhealth: 6,
-                donutCooldown: 40,
-                donutTimer: 0,
-                donutScale: 0.5,
-                donutAim: 18,
-                donutGrav: 300,
-                donutBounce: 0.8,
-                damage: 10,
-                time: 140,
-                donutSpeed: 550,
-                speed: 250,
-                jumpHeight: -500,
-                jumps: 1,
-                jumpsMax: 1,
-                donutSplits: 1,
-                shots: 1
+                iFrames: tempplayer.getData('iFrames'),
+                maxFrames: tempplayer.getData('maxFrames'),
+                health: tempplayer.getData('health'),
+                maxhealth: tempplayer.getData('maxhealth'),
+                donutCooldown: tempplayer.getData('donutCooldown'),
+                donutTimer: tempplayer.getData('donutTimer'),
+                donutScale: tempplayer.getData('donutScale'),
+                donutAim: tempplayer.getData('donutAim'),
+                donutGrav: tempplayer.getData('donutGrav'),
+                donutBounce: tempplayer.getData('donutBounce'),
+                damage: tempplayer.getData('damage'),
+                time: tempplayer.getData('time'),
+                donutSpeed: tempplayer.getData('donutSpeed'),
+                speed: tempplayer.getData('speed'),
+                jumpHeight: tempplayer.getData('jumpHeight'),
+                jumps: tempplayer.getData('jumps'),
+                jumpsMax: tempplayer.getData('jumpsMax'),
+                donutSplits: tempplayer.getData('donutSplits'),
+                shots: tempplayer.getData('shots')
             });
+
             this.add.text(Player.x, Player.y-40, 'Press "Z" to shoot', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-30, 'Press Space to jump and double jump', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-20, 'Use the arrow keys to move and aim', { font: '"Press Start 2P"' });
@@ -819,8 +825,8 @@ class PlayScene extends Phaser.Scene {
     }
     Change(){
         this.scene.pause();
-        this.scene.launch('PlayScene2', {player: this.player });
+        this.scene.launch('PlayScene4', {player: this.player });
     }
 }
 
-export default PlayScene;
+export default PlayScene3;
