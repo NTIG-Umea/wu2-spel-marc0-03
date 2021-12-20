@@ -1,11 +1,21 @@
 var maped;
-class PlayScene extends Phaser.Scene {
+var tilesete
+var tempplayer
+class PlayScene4 extends Phaser.Scene {
     constructor() {
-        super('PlayScene');
-        this.scenetest = "tjena från " + this.scene;
+        super('PlayScene4');
+    }
+    init(data)
+    {
+        console.log(data.player)
+        tempplayer = data.player;
+        console.log(this.player)
     }
 
+    
+
     create() {
+        console.log(this.scenetest)
         this.gameOver = false;
         this.right = true;
         this.physics.world.setBounds(0, 0, 4768, 608)
@@ -16,8 +26,7 @@ class PlayScene extends Phaser.Scene {
         this.background.setScrollFactor(0)
 
         this.createMountains();
-
-        const map = this.make.tilemap({ key: "map1", tileWidth: 32, tileHeight: 32 });
+        const map = this.make.tilemap({ key: "map4", tileWidth: 16, tileHeight: 16 });
         const tileset = map.addTilesetImage('32Tileset', 'tiles');
         const tileset2 = map.addTilesetImage('train-tileset-outside', 'tiles2');
         const tileset3 = map.addTilesetImage('train-tileset-new', 'tiles3');
@@ -33,38 +42,52 @@ class PlayScene extends Phaser.Scene {
         });
         this.platforms = map.createLayer('Platforms', tileset3);
         this.platforms.setCollisionByExclusion(-1, true);
+
         map.getObjectLayer('Player').objects.forEach((Player) => {
+            
             this.player = this.physics.add.sprite(Player.x, Player.y, 'Homer').setScale(0.8,0.65);
             this.player.setBounce(0);
             this.player.setCollideWorldBounds(true);
             this.player.setGravityY(1400)
             this.player.setDataEnabled();
             this.player.setData({
-                iFrames: 80,
-                maxFrames: 80,
-                health: 6,
-                maxhealth: 6,
-                donutCooldown: 20,
-                donutTimer: 0,
-                donutScale: 0.5,
-                donutAim: 18,
-                donutGrav: 300,
-                donutBounce: 0.8,
-                damage: 10,
-                time: 140,
-                donutSpeed: 550,
-                speed: 250,
-                jumpHeight: -500,
-                jumps: 1,
-                jumpsMax: 1,
-                donutSplits: 1,
-                shots: 20
+                iFrames: tempplayer.getData('iFrames'),
+                maxFrames: tempplayer.getData('maxFrames'),
+                health: tempplayer.getData('health'),
+                maxhealth: tempplayer.getData('maxhealth'),
+                donutCooldown: tempplayer.getData('donutCooldown'),
+                donutTimer: tempplayer.getData('donutTimer'),
+                donutScale: tempplayer.getData('donutScale'),
+                donutAim: tempplayer.getData('donutAim'),
+                donutGrav: tempplayer.getData('donutGrav'),
+                donutBounce: tempplayer.getData('donutBounce'),
+                damage: tempplayer.getData('damage'),
+                time: tempplayer.getData('time'),
+                donutSpeed: tempplayer.getData('donutSpeed'),
+                speed: tempplayer.getData('speed'),
+                jumpHeight: tempplayer.getData('jumpHeight'),
+                jumps: tempplayer.getData('jumps'),
+                jumpsMax: tempplayer.getData('jumpsMax'),
+                donutSplits: tempplayer.getData('donutSplits'),
+                shots: tempplayer.getData('shots')
             });
+            
+            
+           this.player.body.x=Player.x;
+           this.player.body.y=Player.y;
+           this.player.x=Player.x;
+           this.player.y=Player.y;
+           //this.player.setDepth(100);
+
             this.add.text(Player.x, Player.y-40, 'Press "Z" to shoot', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-30, 'Press Space to jump and double jump', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-20, 'Use the arrow keys to move and aim', { font: '"Press Start 2P"' });
             //donutCooldown is the amount of time it takes to reaload
             //donutTimer is the thing that is counting down
+        });
+        map.getObjectLayer('StartButton').objects.forEach((StartButton) => {
+            this.StartButton = this.physics.add.sprite(StartButton.x - 12, StartButton.y - StartButton.height, 'button').setScale(1);
+            this.StartButton.body.immovable = true;
         });
 
 
@@ -80,77 +103,17 @@ class PlayScene extends Phaser.Scene {
             this.Door = this.physics.add.sprite(Door.x, Door.y - Door.height - 32, 'Door').setScale(0.5, 1);
             this.Door.body.immovable = true;
         });
-        map.getObjectLayer('StartButton').objects.forEach((StartButton) => {
-            this.StartButton = this.physics.add.sprite(StartButton.x - 12, StartButton.y - StartButton.height, 'button').setScale(1);
-            this.StartButton.body.immovable = true;
-        });
         map.getObjectLayer('StartZone').objects.forEach((StartZone) => {
             this.StartZone = this.physics.add.sprite(StartZone.x, StartZone.y + StartZone.height / 2, 'empty').setSize(1, StartZone.height);
             this.StartZone.body.immovable = true;
         });
+        map.getObjectLayer('BossZone').objects.forEach((BossZone) => {
+            this.BossZone = this.physics.add.sprite(BossZone.x, BossZone.y + BossZone.height / 2, 'empty').setSize(1, BossZone.height);
+            this.BossZone.body.immovable = true;
+        });
         map.getObjectLayer('NewLevel').objects.forEach((Zone) => {
             this.NewLevel = this.physics.add.sprite(Zone.x+Zone.width / 2, Zone.y + Zone.height / 2, 'empty').setSize(Zone.width, Zone.height);
             this.NewLevel.body.immovable = true;
-        });
-        map.getObjectLayer('Items').objects.forEach((Item) => {
-            let random = Phaser.Math.FloatBetween(0, 10)
-            this.Item = this.items.create(Item.x, Item.y, 'Powerups').setScale(1);
-            if (random <= 1) {
-                this.Item.anims.play('0', true);
-                this.Item.setData({ type: 1 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Damage', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 2) {
-                this.Item.anims.play('1', true);
-                this.Item.setData({ type: 2 });
-                this.add.text(Item.x, Item.y+40, '+ Increases JumpHeight', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 3) {
-                this.Item.anims.play('2', true);
-                this.Item.setData({ type: 3 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Donuts Airtime', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 4) {
-                this.Item.anims.play('3', true);
-                this.Item.setData({ type: 4 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Donut Speed\n+ Increases Aim', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 5) {
-                this.Item.anims.play('4', true);
-                this.Item.setData({ type: 5 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Amount Of Jumps', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 6) {
-                this.Item.anims.play('5', true);
-                this.Item.setData({ type: 6 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Amount Of Shots\n- Decreases Firerate', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 7) {
-                this.Item.anims.play('6', true);
-                this.Item.setData({ type: 7 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Player Speed', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 8) {
-                this.Item.anims.play('7', true);
-                this.Item.setData({ type: 8 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Firerate', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else if (random <= 9) {
-                this.Item.anims.play('8', true);
-                this.Item.setData({ type: 9 });
-                this.add.text(Item.x, Item.y+40, '+ Increases Max Hp', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff' }).setOrigin(0.5,0);
-            } else {
-                this.Item.anims.play('9', true);
-                this.Item.setData({ type: 10 });
-                this.add.text(Item.x, Item.y+40, '+ SCATTERSHOT\n+ LETS GOOOOO', { font: '"Press Start 2P"', fontSize: '24px', color: '#fff'}).setOrigin(0.5,0);
-            }
-
-            if (Item.type == 0) {
-                if (Phaser.Math.FloatBetween(0,1)<0.1) {
-                    this.Item.setData({ level: 2 });
-                    this.Item.setTint(0xffff00)
-                    this.add.text(Item.x, Item.y-60, 'GOLDEN\nIncreased effect', { font: '"Press Start 2P"', fontSize: '48px', color: '#ff0', align: 'center', stroke: '#0', strokeThickness: 2}).setOrigin(0.5,0);
-                } else {
-                    this.Item.setData({ level: 1 });
-                }
-            } else {
-                this.Item.setData({ level: 2 });
-                this.Item.setTint(0xffff00)
-                this.add.text(Item.x, Item.y-60, 'GOLDEN\nIncreased effect', { font: '"Press Start 2P"', fontSize: '48px', color: '#ff0', align: 'center', stroke: '#0', strokeThickness: 2}).setOrigin(0.5,0);
-            }
-
         });
 
         this.buttonPressed = false
@@ -171,6 +134,7 @@ class PlayScene extends Phaser.Scene {
         this.createHitboxes();
         var dis = this;
         maped = map;
+        tilesete = tileset;
 
         this.input.keyboard.on('keydown-SPACE', function (event) {
             if (dis.player.getData('jumps') != 0 && !dis.player.body.onFloor()) {
@@ -178,13 +142,13 @@ class PlayScene extends Phaser.Scene {
                 dis.player.setData('jumps', dis.player.getData('jumps') - 1)
             }
         });
-
         this.Fade = this.add.image(0, 0, 'black').setOrigin(0, 0).setScale(2);
         this.Fade.setScrollFactor(0);
         this.tweens.add({
             targets: this.Fade,
             alpha: 0,
-            duration: 1500
+            duration: 2000,
+            ease: 'Sine.easeInOut'
         });
     }
 
@@ -236,48 +200,70 @@ class PlayScene extends Phaser.Scene {
             }
         }
         })
-        this.Shooters.children.iterate(function (child) {
-            if (750>Math.sqrt(Math.pow(child.x-x,2)+Math.pow(child.y-y,2))) {
-            var num = dis.Raycast(x, y, width, height, child);
-            } else {
-            var num = 1;
-            }
-            if (child.getData('time') >= 100 && num == 0) {
-                if (child.getData('type') == 1) {
-                    let angle = Math.atan2((y - child.body.y), (x - child.body.x))
-                    var bomb = bombs.create(child.body.x + 32, child.body.y + 32, 'snoboll').setScale(0.5);
-                    let speed = 500;
-                    bomb.setDataEnabled();
-                    bomb.setData({ time: 100, type: 1 });
-                    bomb.setVelocityX(Math.cos(angle) * speed)
-                    bomb.setVelocityY(Math.sin(angle) * speed)
-                    bomb.setCollideWorldBounds(true);
-                    bomb.body.setGravityY(0);
-                } else {
-                    for (let i = 0; i < 3; i++) {
-                        let angle = Math.atan2((y - child.body.y), (x - child.body.x)) + ((i * 0.1) - 0.1)
-                        var bomb = bombs.create(child.body.x + 32, child.body.y + 32, 'snoboll').setScale(0.5);
-                        let speed = 500;
-                        bomb.setDataEnabled();
-                        bomb.setData({ time: 100, type: 1 });
-                        bomb.setVelocityX(Math.cos(angle) * speed)
-                        bomb.setVelocityY(Math.sin(angle) * speed)
-                        bomb.setCollideWorldBounds(true);
-                        bomb.body.setGravityY(0);
-                    }
+        this.bosses.children.iterate(function (child) {
+            if (child.getData('attackCooldown') <= 0) {
+                var rand = Phaser.Math.FloatBetween(0, 1)
+                if (child.data.values.health <= 300) {
+                    child.data.values.attackCooldown = 10;
+                    child.setTint(0x00ff00)
+                    if (child.data.values.health>10) {
+                    child.data.values.health-=7;
+                    dis.HealthBar.width = 300 * (child.data.values.health / 2000)
                 }
-                child.data.values.time = 0;
+                } else if (child.data.values.health <= 1000){
+                    child.data.values.attackCooldown = 100;
+                    child.setTint(0xff0000)
+                } else {
+                    child.data.values.attackCooldown = 150;
+                }
+                if (rand <= 0.25) {
+                    dis.graphics.fillRect(child.body.x - 700, child.body.y + child.body.height / 2, 700, child.body.height / 2);
+                    dis.time.addEvent({
+                        delay: 1200,
+                        callback: () => {
+                            dis.attack1(child)
+                        }
+                    });
+
+                } else if (rand <= 0.5) {
+                    dis.graphics.fillRect(child.body.x - 700, child.body.y, 700, child.body.height / 2);
+                    dis.time.addEvent({
+                        delay: 1200,
+                        callback: () => {
+                            dis.attack2(child)
+                        }
+                    });
+                } else if (rand <= 0.75) {
+                    dis.time.addEvent({
+                        delay: 1000,
+                        callback: () => {
+                            dis.attack3(child)
+                        }
+                    });
+                } else {
+                    for (let i = 1; i < 9; i++) {
+                        dis.graphics.fillRect(child.body.x - i * 80 - 20, child.body.y, 40, child.body.height);
+
+                    }
+                    dis.time.addEvent({
+                        delay: 2000,
+                        callback: () => {
+                            dis.attack4(child)
+                        }
+                    });
+                    child.data.values.attackCooldown *= 2;
+                }
+
+
             } else {
-                child.data.values.time += 1;
+                child.data.values.attackCooldown -= 1;
             }
         })
 
-        if (this.Shooters.countActive(true) == 0 && this.brawlers.countActive(true) == 0 && this.Started) {
-            this.Door.destroy();
-        }
     }
 
 
+ 
     AutoDelete() {
         if (this.bombs.countActive(true) != 0) {
             this.bombs.children.iterate(function (child) {
@@ -515,26 +501,23 @@ class PlayScene extends Phaser.Scene {
         this.donuts = this.physics.add.group({});
         this.bombs = this.physics.add.group({});
 
-        this.Shooters = this.physics.add.group({});
         this.brawlers = this.physics.add.group({});
 
         this.pickups = this.physics.add.group({});
         this.items = this.physics.add.group({});
+
+        this.bosses = this.physics.add.group({});
     }
     createHitboxes() {
-        this.physics.add.collider(this.Shooters, this.platforms);
         this.physics.add.collider(this.donuts, this.platforms, this.split, null, this);
-        this.physics.add.collider(this.donuts, this.StartDoor, this.split, null, this);
-        this.physics.add.collider(this.donuts, this.Door, this.split, null, this);
         this.physics.add.collider(this.player, this.platforms);
         this.physics.add.collider(this.pickups, this.platforms);
         this.physics.add.collider(this.player, this.StartDoor);
         this.physics.add.collider(this.player, this.Door);
-        
 
         this.physics.add.overlap(this.player, this.StartZone, this.start, null, this);
+        this.physics.add.overlap(this.player, this.BossZone, this.Bosstime, null, this);
 
-        this.physics.add.overlap(this.player, this.Shooters, this.hitPlayer, null, this);
         this.physics.add.overlap(this.player, this.brawlers, this.hitPlayer, null, this);
         this.physics.add.overlap(this.player, this.items, this.itemed, null, this);
         this.physics.add.collider(this.player, this.bosses, this.hitPlayer, null, this);
@@ -543,17 +526,17 @@ class PlayScene extends Phaser.Scene {
 
         this.physics.add.collider(this.bombs, this.platforms, this.destroyBullet, null, this);
         this.physics.add.overlap(this.player, this.bombs, this.hitPlayerBomb, null, this);
-        this.physics.add.overlap(this.donuts, this.Shooters, this.hitShooter, null, this);
         this.physics.add.overlap(this.donuts, this.brawlers, this.hitBrawler, null, this);
+        this.physics.add.overlap(this.donuts, this.bosses, this.hitBoss, null, this);
         this.physics.add.overlap(this.donuts, this.StartButton, this.hitButton, null, this);
 
         this.physics.add.overlap(this.player, this.pickups, this.pickuped, null, this);
     }
 
     moveMountains() {
-        this.background11.x-=0.4
-        this.background12.x-=0.4
-        this.background13.x-=0.4
+        this.background11.x-=0.2
+        this.background12.x-=0.2
+        this.background13.x-=0.2
         if (this.background11.x<-900) {
             this.background11.x = this.background13.x+this.background13.width-40;
         }
@@ -563,9 +546,9 @@ class PlayScene extends Phaser.Scene {
         if (this.background13.x<-900) {
             this.background13.x = this.background12.x+this.background12.width-40;
         }
-        this.background21.x-=0.8
-        this.background22.x-=0.8
-        this.background23.x-=0.8
+        this.background21.x-=0.4
+        this.background22.x-=0.4
+        this.background23.x-=0.4
         if (this.background21.x<-900) {
             this.background21.x = this.background23.x+this.background23.width-40;
         }
@@ -575,9 +558,9 @@ class PlayScene extends Phaser.Scene {
         if (this.background23.x<-900) {
             this.background23.x = this.background22.x+this.background22.width-40;
         }
-        this.background31.x-=1.2
-        this.background32.x-=1.2
-        this.background33.x-=1.2
+        this.background31.x-=0.6
+        this.background32.x-=0.6
+        this.background33.x-=0.6
         if (this.background31.x<-900) {
             this.background31.x = this.background33.x+this.background33.width-40;
         }
@@ -611,14 +594,6 @@ class PlayScene extends Phaser.Scene {
         }
     }
 
-    hitShooter(donut, shooter) {
-        shooter.setData('health', shooter.getData('health') - donut.getData('damage'))
-        if (shooter.getData('health') <= 0) {
-            this.spawnHealth(shooter);
-            shooter.destroy();
-        }
-        donut.setData('time', 0);
-    };
     hitBrawler(donut, brawler) {
         brawler.data.values.health -= donut.getData('damage');
         if (brawler.getData('health') <= 0) {
@@ -628,14 +603,22 @@ class PlayScene extends Phaser.Scene {
         }
         donut.setData('time', 0);
     };
+    hitBoss(donut, boss) {
+        boss.data.values.health -= donut.getData('damage');
+        console.log(boss.data.values.Health)
+        this.HealthBar.width = 300 * (boss.data.values.health / 2000)
+        if (boss.getData('health') <= 0) {
+            this.spawnHealth(boss);
+
+            boss.destroy();
+        }
+        donut.setData('time', 0);
+    };
 
     hitPlayerBomb(player, bomb) {
         bomb.data.values.time = 0;
         this.hitPlayer(player);
 
-    };
-    hitPlayerShooter(player, _shooter) {
-        this.hitPlayer(player);
     };
     hitPlayerBrawler(player, _brawler) {
         this.hitPlayer(player);
@@ -667,61 +650,35 @@ class PlayScene extends Phaser.Scene {
     itemed(player, item) {
         if (item.getData('type') == 1) {
             this.player.setData('damage', this.player.getData('damage') * 1.5)
-            this.player.setData('donutScale', this.player.getData('donutScale') + 0.2)
-            if (item.getData('level')==2) {
-                this.player.setData('damage', this.player.getData('damage') * 2)
-            }
         } else if (item.getData('type') == 2) {
             this.player.setData('jumpHeight', this.player.getData('jumpHeight') * 1.25)
-            if (item.getData('level')==2) {
-                this.player.setData('jumpHeight', this.player.getData('jumpHeight') * 1.25)
-            }
+
         } else if (item.getData('type') == 3) {
             this.player.setData('time', this.player.getData('time') * 3)
-            if (item.getData('level')==2) {
-                this.player.setData('time', this.player.getData('time') * 2)
-            }
+
         } else if (item.getData('type') == 4) {
             this.player.setData('donutSpeed', this.player.getData('donutSpeed') + 150)
-            this.player.setData('donutAim', this.player.getData('donutAim') + 3)
-            if (item.getData('level')==2) {
-                this.player.setData('donutSpeed', this.player.getData('donutSpeed') + 150)
-                this.player.setData('donutAim', this.player.getData('donutAim') + 3)
-            }
+
         } else if (item.getData('type') == 5) {
             this.player.setData('jumpsMax', this.player.getData('jumpsMax') + 2)
-            if (item.getData('level')==2) {
-                this.player.setData('jumpsMax', this.player.getData('jumpsMax') + 2)
-            }
+
         } else if (item.getData('type') == 6) {
             this.player.setData('shots', this.player.getData('shots')+2)
             this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 1.3)
-            if (item.getData('level')==2) {
-                this.player.setData('shots', this.player.getData('shots')+2)
-            }
+
         } else if (item.getData('type') == 7) {
-            this.player.setData('speed', this.player.getData('speed') + 75)
-            if (item.getData('level')==2) {
-                this.player.setData('speed', this.player.getData('speed') + 75)
-            }
+            this.player.setData('Speed', this.player.getData('speed') + 300)
+
         } else if (item.getData('type') == 8) {
             this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 0.7)
-            if (item.getData('level')==2) {
-                this.player.setData('donutCooldown', this.player.getData('donutCooldown') * 0.7)
-            }
+
         } else if (item.getData('type') == 9) {
             this.player.setData('health', this.player.getData('health') + 3)
             this.player.setData('maxhealth', this.player.getData('maxhealth') + 3)
-            if (item.getData('level')==2) {
-                this.player.setData('health', this.player.getData('health') + 3)
-            this.player.setData('maxhealth', this.player.getData('maxhealth') + 3)
-            }
             this.lifesText.setText("lifes: " + player.data.values.health + " / " + player.data.values.maxhealth);
+
         } else {
             this.player.setData('donutSplits', this.player.getData('donutSplits') + 2)
-            if (item.getData('level')==2) {
-                this.player.setData('donutSplits', this.player.getData('donutSplits') + 2)
-            }
         }
         this.items.clear(true, true);
     }
@@ -740,21 +697,6 @@ class PlayScene extends Phaser.Scene {
             Health.body.setBounce(1, 0.2)
         }
     }
-    Raycast(x, y, width, height, child) {
-        let line = new Phaser.Geom.Line(x, y, child.x, child.y - 16);
-        let line2 = new Phaser.Geom.Line(x + width, y + height, child.x, child.y + 16);
-        let line3 = new Phaser.Geom.Line(x, y + height, child.x, child.y - 16);
-        let line4 = new Phaser.Geom.Line(x + width, y, child.x, child.y + 16);
-        //this.graphics.strokeLineShape(line);
-        //this.graphics.strokeLineShape(line2);
-        //this.graphics.strokeLineShape(line3);
-        //this.graphics.strokeLineShape(line4);
-        let overlappingTiles = this.platforms.getTilesWithinShape(line, { isColliding: true });
-        let overlappingTiles2 = this.platforms.getTilesWithinShape(line2, { isColliding: true });
-        let overlappingTiles3 = this.platforms.getTilesWithinShape(line3, { isColliding: true });
-        let overlappingTiles4 = this.platforms.getTilesWithinShape(line4, { isColliding: true });
-        return overlappingTiles.length + overlappingTiles2.length + overlappingTiles3.length + overlappingTiles4.length;
-    }
     start(_player, StartZone) {
         this.tweens.add({
             targets: this.StartDoor,
@@ -762,65 +704,161 @@ class PlayScene extends Phaser.Scene {
             duration: 1200,
             ease: 'Bounce'
         });
-        maped.getObjectLayer('Brawlers').objects.forEach((Brawler) => {
-            this.brawler = this.brawlers.create(Brawler.x, Brawler.y, 'brawler').setScale(0.5);
-            this.brawler.setVelocityX(0);
-            this.brawler.setVelocityY(0);
-            this.brawler.setDataEnabled();
-            this.brawler.setData({ health: 20 , type: 1});
-        });
-        maped.getObjectLayer('Shooters').objects.forEach((shooter) => {
-            // iterera över spikarna, skapa spelobjekt
-            this.shooter = this.Shooters.create(shooter.x, shooter.y - shooter.height, 'shooter');
-            this.shooter.setDataEnabled();
-            this.shooter.body.setGravityY(300);
-            console.log(shooter.type)
-            if (shooter.type == 0) {
-                this.shooter.setData({ time: Phaser.Math.FloatBetween(0, 100), type: 1, health: 10 });
-            } else {
-                this.shooter.setData({ time: Phaser.Math.FloatBetween(0, 100), type: 2, health: 30 });
-                this.shooter.setTint(0x0000ff)
-            }
+        this.tweens.add({
+            targets: this.Door,
+            y: 416-64,
+            duration: 150,
+            ease: 'Sine.easeInOut',
         });
 
         StartZone.destroy();
         this.Started = true;
     }
+    Bosstime(_player, _Bosszone) {
+        this.cameras.main.setBounds(1500, 0, 2600, 608)
+        this.tweens.add({
+            targets: this.Door,
+            y: 448-16,
+            duration: 150,
+            ease: 'Sine.easeInOut',
+        });
+        this.BossZone.destroy();
+        maped.getObjectLayer('Boss').objects.forEach((Boss) => {
+
+            this.boss = this.bosses.create(Boss.x, Boss.y, 'boss').setScale(4);
+            this.boss.setDataEnabled();
+            this.boss.setData({ health: 2000, attackCooldown: 150 });
+            this.boss.body.immovable = true;
+
+            this.HealthBarBack = this.add.rectangle(Boss.x - 400, Boss.y - this.boss.body.height * 2, 308, 68, 0x000000);
+            this.HealthBar = this.add.rectangle(Boss.x - 400, Boss.y - this.boss.body.height * 2, 300, 60, 0xff0000);
+        });
+    }
+
+    attack1(child) {
+        if (child.data != undefined) {
+            for (var i = 0; i < 10; i++) {
+                var bomb = this.bombs.create(child.body.x, child.body.y + child.body.height / 2 + i * child.body.height / 20, this.RandPaket());
+                bomb.setDataEnabled();
+                bomb.setData({ time: 40, type: 1 });
+                bomb.setVelocityX(-1000)
+                bomb.setCollideWorldBounds(true);
+                bomb.body.setGravityY(0);
+            }
+        }
+        this.graphics.clear();
+    }
+    attack2(child) {
+        if (child.data != undefined) {
+            for (var i = 0; i < 10; i++) {
+                var bomb = this.bombs.create(child.body.x, child.body.y + i * child.body.height / 20, this.RandPaket());
+                bomb.setDataEnabled();
+                bomb.setData({ time: 40, type: 1 });
+                bomb.setVelocityX(-1000)
+                bomb.setCollideWorldBounds(true);
+                bomb.body.setGravityY(0);
+            }
+        }
+        this.graphics.clear();
+    }
+    attack3(_child) {
+        this.brawler = this.brawlers.create(this.player.body.x + 200, this.player.body.y - 200, 'brawler').setScale(0.5);
+        this.brawler.setVelocityX(0);
+        this.brawler.setVelocityY(0);
+        this.brawler.setDataEnabled();
+        this.brawler.setData({ health: 5 , type: 2});
+        this.brawler.setTint(0xff0000)
+        this.brawler = this.brawlers.create(this.player.body.x - 200, this.player.body.y - 200, 'brawler').setScale(0.5);
+        this.brawler.setVelocityX(0);
+        this.brawler.setVelocityY(0);
+        this.brawler.setDataEnabled();
+        this.brawler.setData({ health: 5 , type: 2});
+        this.brawler.setTint(0xff0000)
+        this.brawler = this.brawlers.create(this.player.body.x + 100, this.player.body.y - 300, 'brawler').setScale(0.5);
+        this.brawler.setVelocityX(0);
+        this.brawler.setVelocityY(0);
+        this.brawler.setDataEnabled();
+        this.brawler.setData({ health: 5 , type: 2});
+        this.brawler.setTint(0xff0000)
+        this.brawler = this.brawlers.create(this.player.body.x - 100, this.player.body.y - 300, 'brawler').setScale(0.5);
+        this.brawler.setVelocityX(0);
+        this.brawler.setVelocityY(0);
+        this.brawler.setDataEnabled();
+        this.brawler.setData({ health: 5 , type: 2});
+        this.brawler.setTint(0xff0000)
+
+    }
+    attack4(child) {
+        this.graphics.clear();
+        if (child.data != undefined) {
+            for (let i = 1; i < 9; i++) {
+                var bomb = this.bombs.create(child.body.x - i * 80, child.body.y, 'snoboll').setScale(0.5);
+                bomb.setDataEnabled();
+                bomb.setData({ time: 60, type: 2 });
+                bomb.setVelocityY(400);
+                bomb.setCollideWorldBounds(true);
+                bomb.body.setGravityY(0);
+                this.graphics.fillRect(child.body.x - i * 80 + 20, child.body.y, 40, child.body.height);
+            }
+            this.graphics.fillRect(child.body.x - 9 * 80 + 20, child.body.y, 40, child.body.height);
+            this.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.attack41(child)
+                }
+            });
+        }
+    }
+    attack41(child) {
+        this.graphics.clear();
+        if (child.data != undefined) {
+            for (let i = 1; i < 10; i++) {
+                var bomb = this.bombs.create(child.body.x - i * 80 + 40, child.body.y, 'snoboll').setScale(0.6);
+                bomb.setDataEnabled();
+                bomb.setData({ time: 60, type: 2 });
+                bomb.setVelocityY(400);
+                bomb.setCollideWorldBounds(true);
+                bomb.body.setGravityY(0);
+            }
+        }
+    }
 
     split(donut, _not) {
         if (donut.getData('splits') >= 2) {
             this.donut = this.donuts.create(donut.body.x + donut.body.width / 2, donut.body.y + donut.body.height / 2, 'donut');
-            this.donut.setScale(this.player.getData('donutScale'));
-            let tempangle = Phaser.Math.FloatBetween(0,2*Math.PI);
-            this.donut.setVelocityX(Math.cos(tempangle) * this.player.getData('donutSpeed'))
-            this.donut.setVelocityY(Math.sin(tempangle) * this.player.getData('donutSpeed'))
-            this.donut.setBounce(this.player.getData('donutBounce'));
-            this.donut.setGravityY(this.player.getData('donutGrav'));
+            this.donut.setScale(0.5);
+            this.donut.body.velocity.x = Phaser.Math.FloatBetween(-1 * this.player.getData('donutSpeed'), this.player.getData('donutSpeed'))
+            this.donut.body.velocity.y = Phaser.Math.FloatBetween(-1 * this.player.getData('donutSpeed'), this.player.getData('donutSpeed'))
+            this.donut.setBounce(0.8);
+            this.donut.setGravityY(300);
             this.donut.setDataEnabled();
             this.donut.setData({ time: donut.getData('time'), damage: donut.getData('damage'), splits: donut.getData('splits') - 1 });
             donut.setData('splits', donut.getData('splits') - 1)
         }
     }
+    RandPaket() {
+        var rand = Phaser.Math.FloatBetween(0, 3)
+        if (rand <= 1) {
+            return 'paket1'
+        } else if (rand <= 2) {
+            return 'paket2'
+        } else {
+            return 'paket3'
+        }
+    }
 
     NextLevel(_player, _zone) {
-        this.NewLevel.destroy();
+        //this.scene.pause();
         this.tweens.add({
             targets: this.Fade,
             alpha: 1,
             duration: 2000,
             ease: 'Sine.easeInOut'
         });
-        this.time.addEvent({
-            delay: 2000,
-            callback: () => {
-                this.Change()
-            }
-        });
-    }
-    Change(){
-        this.scene.pause();
-        this.scene.launch('PlayScene2', {player: this.player });
+        this.win = this.add.text(0, this.game.config.height/2-60, 'WINNER\ :) ', { font: '"Press Start 2P"', fontSize: '1272px', color: '#ff0', align: 'center', fixedWidth: this.game.config.width, fixedHeight: this.game.config.height});
+        this.win.setScrollFactor(0);
+        this.HealthBar.destroy();
     }
 }
 
-export default PlayScene;
+export default PlayScene4;
