@@ -44,7 +44,7 @@ class PlayScene extends Phaser.Scene {
                 maxFrames: 80,
                 health: 6,
                 maxhealth: 6,
-                donutCooldown: 20,
+                donutCooldown: 40,
                 donutTimer: 0,
                 donutScale: 0.5,
                 donutAim: 18,
@@ -58,7 +58,7 @@ class PlayScene extends Phaser.Scene {
                 jumps: 1,
                 jumpsMax: 1,
                 donutSplits: 1,
-                shots: 20
+                shots: 1
             });
             this.add.text(Player.x, Player.y-40, 'Press "Z" to shoot', { font: '"Press Start 2P"' });
             this.add.text(Player.x, Player.y-30, 'Press Space to jump and double jump', { font: '"Press Start 2P"' });
