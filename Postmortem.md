@@ -41,7 +41,8 @@ Phaser var väldigt jobbit att arbeta med nu och då men jag vet att om jag inte
 
 ## Positiva erfarenheter
 ### Spel
-Jag fick göra ett spel samt lärde jag mig mer om javascript.
+Jag fick skapa ett spel som var ett roligt sätt att lära mig mer om javascript och som i **teori** skulle vara ett roligt sammarbete med estetarna.
+
 ## Negativa erfarenheter
 ### Estetare
 #### Estetare
